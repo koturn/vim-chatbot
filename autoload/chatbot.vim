@@ -1,7 +1,6 @@
 " ============================================================================
 " FILE: chatbot.vim
 " AUTHOR: koturn <jeak.koutan.apple@gmail.com>
-" Last Modified: 2014 09/15
 " DESCRIPTION: {{{
 " Let's talk with Vim!
 " }}}
@@ -40,7 +39,7 @@ function! chatbot#talkmode(mode)
   let l:req_body_dict.utt = input(s:PROMPT.dialog)
 
   while l:req_body_dict.utt !=# 'quit' && l:req_body_dict.utt !=# 'q'
-    echomsg ' ...'
+    echo ' ...'
     let s:response = s:HTTP.post(l:url, s:JSON.encode(l:req_body_dict), l:req_header)
     let l:content = s:JSON.decode(s:response.content)
     echomsg l:content.utt
@@ -57,7 +56,7 @@ function! chatbot#qamode()
         \ 'q': input(s:PROMPT.qa)
         \}
   while l:query.q !=# 'quit' && l:query.q !=# 'q'
-    echomsg ' ...'
+    echo ' ...'
     let l:response = s:HTTP.get(s:DOCOMO_API_URL.knowledgeQA, l:query)
     let l:content = s:JSON.decode(l:response.content)
     echomsg l:content.message.textForDisplay
