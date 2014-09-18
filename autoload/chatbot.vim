@@ -40,8 +40,12 @@ function! chatbot#talkmode(mode)
 
   while l:req_body_dict.utt !=# 'quit' && l:req_body_dict.utt !=# 'q'
     echo ' ...'
-    let s:response = s:HTTP.post(l:url, s:JSON.encode(l:req_body_dict), l:req_header)
-    let l:content = s:JSON.decode(s:response.content)
+    let l:response = s:HTTP.post(l:url, s:JSON.encode(l:req_body_dict), l:req_header)
+    if l:response.status != 200
+      echoerr 'Connection error:' '[' . l:response.status . ']' l:response.statusText
+      return
+    endif
+    let l:content = s:JSON.decode(l:response.content)
     echomsg l:content.utt
     let l:req_body_dict.context = l:content.context
     let l:req_body_dict.utt = input(s:PROMPT.dialog)
@@ -58,6 +62,10 @@ function! chatbot#qamode()
   while l:query.q !=# 'quit' && l:query.q !=# 'q'
     echo ' ...'
     let l:response = s:HTTP.get(s:DOCOMO_API_URL.knowledgeQA, l:query)
+    if l:response.status != 200
+      echoerr 'Connection error:' '[' . l:response.status . ']' l:response.statusText
+      return
+    endif
     let l:content = s:JSON.decode(l:response.content)
     echomsg l:content.message.textForDisplay
     for l:answer in l:content.answers
