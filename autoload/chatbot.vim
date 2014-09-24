@@ -5,6 +5,7 @@
 " Let's talk with Vim!
 " }}}
 " ============================================================================
+scriptencoding utf-8
 let s:save_cpo = &cpo
 set cpo&vim
 
@@ -19,8 +20,9 @@ let s:DOCOMO_API_URL = {
       \ 'knowledgeQA': 'https://api.apigw.smt.docomo.ne.jp/knowledgeQA/v1/ask'
       \}
 let s:PROMPT = {
-      \ 'dialog': 'message> ',
-      \ 'qa': 'question> '
+      \ 'dialog': 'dialog> ',
+      \ 'qa': 'question> ',
+      \ 'srtr': 'srtr> '
       \}
 let s:INDENT = '  '
 lockvar s:APIKEY
@@ -35,20 +37,57 @@ function! chatbot#talkmode(mode)
   let l:url = s:DOCOMO_API_URL.dialogue . '?' . s:HTTP.encodeURI({'APIKEY': s:APIKEY})
   let l:req_header = {'Content-Type': 'application/json'}
   let l:req_body_dict = deepcopy(g:chatbot#user_profile)
-  let l:req_body_dict.mode = a:mode
-  let l:req_body_dict.utt = input(s:PROMPT.dialog)
+  if a:mode ==# 'dialog'
+    call s:dialogmode(l:req_header, l:req_body_dict, l:url)
+  else
+    call s:srtrmode(l:req_header, l:req_body_dict, l:url)
+  endif
+endfunction
 
-  while l:req_body_dict.utt !=# 'quit' && l:req_body_dict.utt !=# 'q'
+
+function s:dialogmode(req_header, req_body_dict, url)
+  let a:req_body_dict.utt = input(s:PROMPT.dialog)
+  while a:req_body_dict.utt !=# 'quit' && a:req_body_dict.utt !=# 'q'
     echo ' ...'
-    let l:response = s:HTTP.post(l:url, s:JSON.encode(l:req_body_dict), l:req_header)
+    let l:response = s:HTTP.post(a:url, s:JSON.encode(a:req_body_dict), a:req_header)
     if l:response.status != 200
       echoerr 'Connection error:' '[' . l:response.status . ']' l:response.statusText
       return
     endif
     let l:content = s:JSON.decode(l:response.content)
     echomsg l:content.utt
-    let l:req_body_dict.context = l:content.context
-    let l:req_body_dict.utt = input(s:PROMPT.dialog)
+    let a:req_body_dict.context = l:content.context
+    let a:req_body_dict.mode = l:content.mode
+    let a:req_body_dict.utt = input(l:content.mode . '> ')
+  endwhile
+endfunction
+
+
+function s:srtrmode(req_header, req_body_dict, url)
+  let a:req_body_dict.utt = 'しりとりしよう'
+  echomsg s:PROMPT.srtr . a:req_body_dict.utt
+  let l:response = s:HTTP.post(a:url, s:JSON.encode(a:req_body_dict), a:req_header)
+  let l:content = s:JSON.decode(l:response.content)
+  let a:req_body_dict.context = l:content.context
+  let a:req_body_dict.mode = l:content.mode
+  echomsg l:content.utt
+
+  let a:req_body_dict.utt = input(s:PROMPT.srtr)
+  while a:req_body_dict.utt !=# 'quit' && a:req_body_dict.utt !=# 'q'
+    echo ' ...'
+    let l:response = s:HTTP.post(a:url, s:JSON.encode(a:req_body_dict), a:req_header)
+    if l:response.status != 200
+      echoerr 'Connection error:' '[' . l:response.status . ']' l:response.statusText
+      return
+    endif
+    let l:content = s:JSON.decode(l:response.content)
+    echomsg l:content.utt
+    if l:content.utt =~# '私の\(勝ち\|負け\)です。$'
+      return
+    endif
+    let a:req_body_dict.context = l:content.context
+    let a:req_body_dict.mode = l:content.mode
+    let a:req_body_dict.utt = input(l:content.mode . '> ')
   endwhile
 endfunction
 

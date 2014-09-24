@@ -1,7 +1,6 @@
 " ============================================================================
 " FILE: chatbot.vim
 " AUTHOR: koturn <jeak.koutan.apple@gmail.com>
-" Last Modified: 2014 09/15
 " DESCRIPTION: {{{
 " Let's talk with Vim!
 " }}}
