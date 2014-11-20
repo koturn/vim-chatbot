@@ -35,4 +35,4 @@ ChatBotQandAMode    | Q&Aを開始します
 
 ## LICENSE
 
-This software is released under the MIT License, see LICENSE.
+This software is released under the MIT License, see [LICENSE](LICENSE).
